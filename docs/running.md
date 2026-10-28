@@ -201,7 +201,9 @@ works, whether or not it runs the engine, and the startup line names it.
 ```
 
 A GPU number uses the sidecar, which the main build also produces (`tools/vision` also builds on its own); the
-server looks for it next to `bin/basalt`. `dynamic` needs no sidecar.
+server looks for it next to `bin/basalt`. A sidecar built with `-DCMAKE_CUDA_ARCHITECTURES=<cc>` for another card's
+compute capability runs the vision on that card; the startup check then warns instead of failing. `dynamic` needs no
+sidecar.
 
 The image encoder is Basalt's own, written for this model's vision tower (no llama.cpp or ggml): bf16 tensor-core
 products and flash attention with fp32 accumulation on the GPU, AVX-512/AVX2 on the CPU. It replaces llama.cpp's

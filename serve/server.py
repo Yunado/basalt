@@ -29,7 +29,7 @@ from serve.engine.errors import EngineStartError  # noqa: E402
 from serve.engine.flags import flag_index  # noqa: E402
 from serve.engine.mock import MockEngine  # noqa: E402
 from serve.engine.process import ProcessEngine  # noqa: E402
-from serve.engine.vision import (EngineVision, Vision, check_gpu, child_env, engine_args, gpu_plan,  # noqa: E402
+from serve.engine.vision import (EngineVision, Vision, check_gpu, child_env, engine_args, gpu_card_name, gpu_plan,  # noqa: E402
                                  gpu_text, gpus_in_play, vision_card, vision_env, vision_line)
 from serve.frontend import ChatTemplate  # noqa: E402
 from serve.handler import Server, serve  # noqa: E402
@@ -118,7 +118,12 @@ def main() -> int:
                 try:
                     gpu_plan(a.engine_bin, str(card))
                 except ValueError as e:
-                    fail(f"vision: {e}")
+                    # the engine accepts sm_120 only, but the sidecar is a separate binary and can
+                    # be built for another card's compute capability; require the card to exist and
+                    # let the sidecar build carry the rest
+                    if "not sm_120" not in str(e) or gpu_card_name(card) is None:
+                        fail(f"vision: {e}")
+                    print(tagged("warning", f"vision: {e}; the sidecar must be built for this card"), flush=True)
             for note in plan.get("notes") or []:
                 print(f"[server] {note}", flush=True)
             if plan.get("warning"):
