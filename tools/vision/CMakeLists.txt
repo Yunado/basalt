@@ -15,6 +15,22 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     set(CMAKE_BUILD_TYPE Release)
   endif()
   option(BUILD_TESTING "Build the parity programs" OFF)
+  # the standalone configuration needs the root project's warnings and platform targets
+  add_library(warnings INTERFACE)
+  target_compile_options(warnings INTERFACE
+    $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CXX_COMPILER_ID:MSVC>>:/W4>
+    $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CXX_COMPILER_ID:MSVC>>:/utf-8>
+    $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-Wall>
+    $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-Wextra>)
+  add_library(platform STATIC
+    ../../src/platform/file.cpp ../../src/platform/memory.cpp ../../src/platform/direct_file.cpp
+    ../../src/platform/process.cpp ../../src/platform/mapped_file.cpp ../../src/platform/cpu.cpp
+    ../../src/platform/system.cpp ../../src/platform/dynlib.cpp)
+  target_include_directories(platform PUBLIC ../../include)
+  target_link_libraries(platform PUBLIC warnings ${CMAKE_DL_LIBS})
+  if(WIN32)
+    target_link_libraries(platform PUBLIC advapi32 dxgi)
+  endif()
 endif()
 find_package(CUDAToolkit REQUIRED)
 find_package(Threads REQUIRED)
