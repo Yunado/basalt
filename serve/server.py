@@ -114,16 +114,9 @@ def main() -> int:
             except ValueError as e:
                 fail(f"gpu: {e}")
             card = vision_card(mode)
-            if card is not None:                       # a numbered sidecar card, checked like gpu before it starts
-                try:
-                    gpu_plan(a.engine_bin, str(card))
-                except ValueError as e:
-                    # the engine accepts sm_120 only, but the sidecar is a separate binary and can
-                    # be built for another card's compute capability; require the card to exist and
-                    # let the sidecar build carry the rest
-                    if "not sm_120" not in str(e) or gpu_card_name(card) is None:
-                        fail(f"vision: {e}")
-                    print(tagged("warning", f"vision: {e}; the sidecar must be built for this card"), flush=True)
+            if card is not None:                       # a numbered sidecar card: the engine's sm_120 rule is the
+                if gpu_card_name(card) is None:        # engine's; the sidecar is its own build and says whether
+                    fail(f"vision: GPU {card} is not there")   # it runs on the card when it starts
             for note in plan.get("notes") or []:
                 print(f"[server] {note}", flush=True)
             if plan.get("warning"):
